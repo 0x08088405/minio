@@ -55,3 +55,5 @@ pub trait ReadPrimitives: io::Read {
     read_impl!(u32, |x| f32::from_bits(x), f32, "f32", read_f32_le, read_f32_be, read_f32_ne);
     read_impl!(u64, |x| f64::from_bits(x), f64, "f64", read_f64_le, read_f64_be, read_f64_ne);
 }
+
+impl<R> ReadPrimitives for R where R: io::Read {}
