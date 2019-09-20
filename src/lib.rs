@@ -23,6 +23,16 @@ macro_rules! read_impl {
             Ok(<$t>::from_ne_bytes(read_impl_body!(self, $t)))
         }
     };
+
+    // This one is used for i8/u8 alternate functions because endianness does not matter.
+    ($t: ty, $name: literal, $fn: ident) => {
+        #[doc = "Reads a `"]
+        #[doc = $name]
+        #[doc = "` from the underlying reader."]
+        fn $fn(&mut self) -> io::Result<$t> {
+            Ok(<$t>::from_ne_bytes(read_impl_body!(self, $t)))
+        }
+    };
 }
 
 macro_rules! read_impl_body {
@@ -34,6 +44,8 @@ macro_rules! read_impl_body {
 }
 
 pub trait ReadPrimitives: io::Read {
+    read_impl!(i8, "i8", read_i8);
+    read_impl!(u8, "u8", read_u8);
     read_impl!(i8, "i8", read_i8_le, read_i8_be, read_i8_ne);
     read_impl!(u8, "u8", read_u8_le, read_u8_be, read_u8_ne);
     read_impl!(i16, "i16", read_i16_le, read_i16_be, read_i16_ne);
