@@ -1,36 +1,31 @@
-use std::{io, mem::size_of};
+use std::{convert::identity, io, mem::size_of};
 
 macro_rules! read_impl {
-    ($t: ty, $name: literal, $le: ident, $be: ident, $ne: ident) => {
-        #[doc = "Reads a `"]
-        #[doc = $name]
-        #[doc = "` (little-endian) from the underlying reader."]
-        fn $le(&mut self) -> io::Result<$t> {
-            Ok(<$t>::from_le_bytes(read_impl_body!(self, $t)))
-        }
-
-        #[doc = "Reads a `"]
-        #[doc = $name]
-        #[doc = "` (big-endian) from the underlying reader."]
-        fn $be(&mut self) -> io::Result<$t> {
-            Ok(<$t>::from_be_bytes(read_impl_body!(self, $t)))
-        }
-
-        #[doc = "Reads a `"]
-        #[doc = $name]
-        #[doc = "` (native-endian) from the underlying reader."]
-        fn $ne(&mut self) -> io::Result<$t> {
+    ($t: ty, $name: literal, $fn: ident) => {
+        #[doc = "Reads a `"] #[doc = $name] #[doc = "` from the underlying reader."]
+        fn $fn(&mut self) -> io::Result<$t> {
             Ok(<$t>::from_ne_bytes(read_impl_body!(self, $t)))
         }
     };
 
-    // This one is used for i8/u8 alternate functions because endianness does not matter.
-    ($t: ty, $name: literal, $fn: ident) => {
-        #[doc = "Reads a `"]
-        #[doc = $name]
-        #[doc = "` from the underlying reader."]
-        fn $fn(&mut self) -> io::Result<$t> {
-            Ok(<$t>::from_ne_bytes(read_impl_body!(self, $t)))
+    ($t: ty, $name: literal, $le: ident, $be: ident, $ne: ident) => {
+        read_impl!($t, identity, $t, $name, $le, $be, $ne);
+    };
+
+    ($read_t: ty, $map: expr, $ret_t: ty, $name: literal, $le: ident, $be: ident, $ne: ident) => {
+        #[doc = "Reads a `"] #[doc = $name] #[doc = "` (little-endian) from the underlying reader."]
+        fn $le(&mut self) -> io::Result<$ret_t> {
+            Ok($map(<$read_t>::from_le_bytes(read_impl_body!(self, $read_t))))
+        }
+
+        #[doc = "Reads a `"] #[doc = $name] #[doc = "` (big-endian) from the underlying reader."]
+        fn $be(&mut self) -> io::Result<$ret_t> {
+            Ok($map(<$read_t>::from_be_bytes(read_impl_body!(self, $read_t))))
+        }
+
+        #[doc = "Reads a `"] #[doc = $name] #[doc = "` (native-endian) from the underlying reader."]
+        fn $ne(&mut self) -> io::Result<$ret_t> {
+            Ok($map(<$read_t>::from_ne_bytes(read_impl_body!(self, $read_t))))
         }
     };
 }
@@ -56,4 +51,7 @@ pub trait ReadPrimitives: io::Read {
     read_impl!(u64, "u64", read_u64_le, read_u64_be, read_u64_ne);
     read_impl!(i128, "i128", read_i128_le, read_i128_be, read_i128_ne);
     read_impl!(u128, "u128", read_u128_le, read_u128_be, read_u128_ne);
+
+    read_impl!(u32, |x| f32::from_bits(x), f32, "f32", read_f32_le, read_f32_be, read_f32_ne);
+    read_impl!(u64, |x| f64::from_bits(x), f64, "f64", read_f64_le, read_f64_be, read_f64_ne);
 }
