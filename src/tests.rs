@@ -1,4 +1,4 @@
-use crate::{ReadPrimitives, WritePrimitives};
+use crate::{ReadPrimitives, ReadStrings, WritePrimitives};
 use std::mem::size_of;
 
 #[test]
@@ -88,4 +88,40 @@ fn read_write_primitives() {
     buf.clear();
     buf.write_f32_be(-429623296.0).unwrap();
     assert_eq!(&TEST[..size_of::<f32>()], &*buf);
+}
+
+#[test]
+fn read_write_strings() {
+    use std::{io::Cursor, slice};
+
+    let test_utf8 = "ℍ𝕖𝕝𝕝𝕠, 𝕨𝕠𝕣𝕝𝕕! 👋";
+    let test_utf8_invalid = b"Hello, \x80world!";
+    let test_cstring = b"Hello, world!\0";
+    let test_cstring_unterminated = b"Hello, world!"; // no null
+
+    // reading
+    let mut reader = Cursor::new(test_utf8.as_bytes());
+    assert_eq!(test_utf8, &*(reader.read_string_utf8(test_utf8.len()).unwrap().unwrap()));
+
+    let mut reader = Cursor::new(test_utf8_invalid);
+    assert!(reader.read_string_utf8(test_utf8_invalid.len()).unwrap().is_err());
+    reader.set_position(0);
+    assert_eq!("Hello, �world!", &*(reader.read_string_utf8_lossy(test_utf8_invalid.len()).unwrap()));
+
+    let utf16_bytes = test_utf8.encode_utf16().collect::<Vec<_>>().into_boxed_slice();
+    let mut reader = Cursor::new(unsafe {
+        slice::from_raw_parts(utf16_bytes.as_ptr() as *const u8, utf16_bytes.len() * 2)
+    });
+    assert_eq!(test_utf8, &*(reader.read_string_utf16(utf16_bytes.len()).unwrap().unwrap()));
+
+    let mut reader = Cursor::new(test_cstring);
+    assert_eq!("Hello, world!", &*(reader.read_cstring_utf8(None, None).unwrap().unwrap()));
+    reader.set_position(0);
+    assert!(reader.read_cstring_utf8(Some(4), None).is_err()); // max chars = 4, no null found
+    
+    let mut reader = Cursor::new(test_cstring_unterminated);
+    assert!(reader.read_cstring_utf8(None, None).is_err());
+
+    // writing
+    // ...... oh that doesn't exist yet!
 }
