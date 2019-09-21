@@ -48,6 +48,8 @@ macro_rules! read_impl_body {
     }};
 }
 
+/// Provides methods for reading primitive numbers
+/// (except `isize` and `usize` as their size is platform dependent).
 pub trait ReadPrimitives: io::Read {
     read_impl!(i8, "an `i8`", read_i8);
     read_impl!(u8, "a `u8`", read_u8);
@@ -71,6 +73,7 @@ pub trait ReadPrimitives: io::Read {
 
 impl<R> ReadPrimitives for R where R: io::Read {}
 
+/// Provides methods for reading strings of various encodings.
 pub trait ReadStrings: io::Read {
     /// Reads a UTF-8 encoded string from the underlying reader with a given length
     /// (of bytes, not characters).
