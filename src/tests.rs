@@ -1,0 +1,91 @@
+use crate::{ReadPrimitives, WritePrimitives};
+use std::mem::size_of;
+
+#[test]
+fn read_write_primitives() {
+    const TEST: &[u8] = &[0xCD, 0xCC, 0xDC, 0x40, 0xE6, 0x73, 0x87, 0xFF];
+
+    // read
+    assert_eq!(205, TEST.read_u8().unwrap());
+    assert_eq!(205, TEST.read_u8_le().unwrap());
+    assert_eq!(205, TEST.read_u8_be().unwrap());
+    assert_eq!(-51, TEST.read_i8().unwrap());
+    assert_eq!(-51, TEST.read_i8_le().unwrap());
+    assert_eq!(-51, TEST.read_i8_be().unwrap());
+    assert_eq!(52429, TEST.read_u16_le().unwrap());
+    assert_eq!(52684, TEST.read_u16_be().unwrap());
+    assert_eq!(-13107, TEST.read_i16_le().unwrap());
+    assert_eq!(-12852, TEST.read_i16_be().unwrap());
+    assert_eq!(1088212173, TEST.read_u32_le().unwrap());
+    assert_eq!(3452755008, TEST.read_u32_be().unwrap());
+    assert_eq!(1088212173, TEST.read_i32_le().unwrap());
+    assert_eq!(-842212288, TEST.read_i32_be().unwrap());
+    assert_eq!(18412813034295446733, TEST.read_u64_le().unwrap());
+    assert_eq!(14829469844326549503, TEST.read_u64_be().unwrap());
+    assert_eq!(-33931039414104883, TEST.read_i64_le().unwrap());
+    assert_eq!(-3617274229383002113, TEST.read_i64_be().unwrap());
+    assert_eq!(6.9, TEST.read_f32_le().unwrap());
+    assert_eq!(-429623296.0, TEST.read_f32_be().unwrap());
+
+    // write
+    let mut buf = vec![];
+    buf.write_u8_le(205).unwrap();
+    assert_eq!(&TEST[..size_of::<u8>()], &*buf);
+    buf.clear();
+    buf.write_u8_le(205).unwrap();
+    assert_eq!(&TEST[..size_of::<u8>()], &*buf);
+    buf.clear();
+    buf.write_u8_be(205).unwrap();
+    assert_eq!(&TEST[..size_of::<u8>()], &*buf);
+    buf.clear();
+    buf.write_i8(-51).unwrap();
+    assert_eq!(&TEST[..size_of::<i8>()], &*buf);
+    buf.clear();
+    buf.write_i8_le(-51).unwrap();
+    assert_eq!(&TEST[..size_of::<i8>()], &*buf);
+    buf.clear();
+    buf.write_i8_be(-51).unwrap();
+    assert_eq!(&TEST[..size_of::<i8>()], &*buf);
+    buf.clear();
+    buf.write_u16_le(52429).unwrap();
+    assert_eq!(&TEST[..size_of::<u16>()], &*buf);
+    buf.clear();
+    buf.write_u16_be(52684).unwrap();
+    assert_eq!(&TEST[..size_of::<u16>()], &*buf);
+    buf.clear();
+    buf.write_i16_le(-13107).unwrap();
+    assert_eq!(&TEST[..size_of::<i16>()], &*buf);
+    buf.clear();
+    buf.write_i16_be(-12852).unwrap();
+    assert_eq!(&TEST[..size_of::<i16>()], &*buf);
+    buf.clear();
+    buf.write_u32_le(1088212173).unwrap();
+    assert_eq!(&TEST[..size_of::<u32>()], &*buf);
+    buf.clear();
+    buf.write_u32_be(3452755008).unwrap();
+    assert_eq!(&TEST[..size_of::<u32>()], &*buf);
+    buf.clear();
+    buf.write_i32_le(1088212173).unwrap();
+    assert_eq!(&TEST[..size_of::<i32>()], &*buf);
+    buf.clear();
+    buf.write_i32_be(-842212288).unwrap();
+    assert_eq!(&TEST[..size_of::<i32>()], &*buf);
+    buf.clear();
+    buf.write_u64_le(18412813034295446733).unwrap();
+    assert_eq!(&TEST[..size_of::<u64>()], &*buf);
+    buf.clear();
+    buf.write_u64_be(14829469844326549503).unwrap();
+    assert_eq!(&TEST[..size_of::<u64>()], &*buf);
+    buf.clear();
+    buf.write_i64_le(-33931039414104883).unwrap();
+    assert_eq!(&TEST[..size_of::<i64>()], &*buf);
+    buf.clear();
+    buf.write_i64_be(-3617274229383002113).unwrap();
+    assert_eq!(&TEST[..size_of::<i64>()], &*buf);
+    buf.clear();
+    buf.write_f32_le(6.9).unwrap();
+    assert_eq!(&TEST[..size_of::<f32>()], &*buf);
+    buf.clear();
+    buf.write_f32_be(-429623296.0).unwrap();
+    assert_eq!(&TEST[..size_of::<f32>()], &*buf);
+}

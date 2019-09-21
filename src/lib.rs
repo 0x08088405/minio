@@ -1,3 +1,5 @@
+#[cfg(test)] mod tests;
+
 use std::{convert::identity, io, mem::size_of, slice};
 
 macro_rules! _read_impl {
