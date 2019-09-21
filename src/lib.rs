@@ -188,9 +188,7 @@ pub trait ReadStrings: io::Read {
     }
 
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader
-    /// with an unknown length.
-    ///
-    /// Stops reading at the first null terminator.
+    /// with an unknown length. Stops reading at the first null terminator.
     ///
     /// Providing `max` will make the reading halt after reading that many bytes without
     /// finding a null terminator, as a safety measure.
@@ -218,6 +216,42 @@ pub trait ReadStrings: io::Read {
                 count += 1;
             } else {
                 break Ok(String::from_utf8(buf));
+            }
+        }
+    }
+
+    /// Reads a UTF-8 encoded, null-terminated string from the underlying reader
+    /// with an unknown length. Stops reading at the first null terminator.
+    /// 
+    /// If any invalid UTF-8 sequences are present, they are replaced
+    /// with U+FFFD REPLACEMENT CHARACTER, which looks like this: �
+    ///
+    /// Providing `max` will make the reading halt after reading that many bytes without
+    /// finding a null terminator, as a safety measure.
+    /// It will return io::ErrorKind::UnexpectedEof.
+    ///
+    /// Providing a `size_hint` will speed up the reading slightly, especially on larger strings.
+    fn read_cstring_utf8_lossy(
+        &mut self,
+        max: Option<usize>,
+        size_hint: Option<usize>,
+    ) -> io::Result<String> {
+        let mut buf = Vec::with_capacity(size_hint.unwrap_or(0));
+        let mut count = 0;
+        loop {
+            if let Some(max) = max {
+                if count > max {
+                    break Err(io::ErrorKind::UnexpectedEof.into());
+                }
+            }
+
+            let mut next = [0u8; 1];
+            self.read_exact(&mut next[..])?;
+            if next[0] != 0x00 {
+                buf.push(next[0]);
+                count += 1;
+            } else {
+                break Ok(String::from_utf8_lossy(&buf).into_owned());
             }
         }
     }
