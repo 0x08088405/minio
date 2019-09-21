@@ -7,6 +7,7 @@ use std::{
 };
 
 macro_rules! read_impl {
+    // Used for i8 and u8, as they are endian independent.
     ($t: ty, $name: literal, $fn: ident) => {
         #[inline(always)]
         #[doc = "Reads "] #[doc = $name] #[doc = "from the underlying reader."]
@@ -48,6 +49,44 @@ macro_rules! read_impl_body {
     }};
 }
 
+macro_rules! write_impl {
+    // Used for i8 and u8, as they are endian independent.
+    ($t: ty, $name: literal, $fn: ident) => {
+        #[inline(always)]
+        #[doc = "Writes "] #[doc = $name] #[doc = "to the underlying writer."]
+        fn $fn(&mut self, val: $t) -> io::Result<usize> {
+            self.write(&val.to_le_bytes())
+        }
+    };
+
+    ($t: ty, $name: literal, $le: ident, $be: ident, $ne: ident) => {
+        write_impl!($t, identity, $name, $le, $be, $ne);
+    };
+
+    ($t: ty, $map: expr, $name: literal, $le: ident, $be: ident, $ne: ident) => {
+        #[inline(always)]
+        #[doc = "Writes "] #[doc = $name]
+        #[doc = "in little-endian format to the underlying writer."]
+        fn $le(&mut self, val: $t) -> io::Result<usize> {
+            self.write(&$map(val).to_le_bytes())
+        }
+
+        #[inline(always)]
+        #[doc = "Writes "] #[doc = $name]
+        #[doc = "in big-endian format to the underlying writer."]
+        fn $be(&mut self, val: $t) -> io::Result<usize> {
+            self.write(&$map(val).to_be_bytes())
+        }
+
+        #[inline(always)]
+        #[doc = "Writes "] #[doc = $name]
+        #[doc = "in native-endian format to the underlying writer."]
+        fn $ne(&mut self, val: $t) -> io::Result<usize> {
+            self.write(&$map(val).to_ne_bytes())
+        }
+    };
+}
+
 /// Provides methods for reading primitive numbers
 /// (except `isize` and `usize` as their size is platform dependent).
 pub trait ReadPrimitives: io::Read {
@@ -72,6 +111,27 @@ pub trait ReadPrimitives: io::Read {
 }
 
 impl<R> ReadPrimitives for R where R: io::Read {}
+
+pub trait WritePrimitives: io::Write {
+    write_impl!(i8, "an `i8`", write_i8);
+    write_impl!(u8, "a `u8`", write_u8);
+    write_impl!(i8, "an `i8`", write_i8_le, write_i8_be, write_i8_ne);
+    write_impl!(u8, "a `u8`", write_u8_le, write_u8_be, write_u8_ne);
+    write_impl!(i16, "an `i16`", write_i16_le, write_i16_be, write_i16_ne);
+    write_impl!(u16, "a `u16`", write_u16_le, write_u16_be, write_u16_ne);
+    write_impl!(i32, "an `i32`", write_i32_le, write_i32_be, write_i32_ne);
+    write_impl!(u32, "a `u32`", write_u32_le, write_u32_be, write_u32_ne);
+    write_impl!(i64, "an `i64`", write_i64_le, write_i64_be, write_i64_ne);
+    write_impl!(u64, "a `u64`", write_u64_le, write_u64_be, write_u64_ne);
+    write_impl!(i128, "an `i128`", write_i128_le, write_i128_be, write_i128_ne);
+    write_impl!(u128, "a `u128`", write_u128_le, write_u128_be, write_u128_ne);
+
+    #[rustfmt::skip]
+    write_impl!(f32, |x: f32| x.to_bits(), "an `f32`", write_f32_le, write_f32_be, write_f32_ne);
+
+    #[rustfmt::skip]
+    write_impl!(f64, |x: f64| x.to_bits(), "an `f64`", write_f64_le, write_f64_be, write_f64_ne);
+}
 
 /// Provides methods for reading strings of various encodings.
 pub trait ReadStrings: io::Read {
