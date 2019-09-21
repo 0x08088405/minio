@@ -55,7 +55,7 @@ macro_rules! write_impl {
         #[inline(always)]
         #[doc = "Writes "] #[doc = $name] #[doc = "to the underlying writer."]
         fn $fn(&mut self, val: $t) -> io::Result<usize> {
-            self.write(&val.to_le_bytes())
+            self.write(&val.to_ne_bytes())
         }
     };
 
@@ -130,6 +130,8 @@ pub trait WritePrimitives: io::Write {
     write_impl!(f32, |x: f32| x.to_bits(), "an `f32`", write_f32_le, write_f32_be, write_f32_ne);
     write_impl!(f64, |x: f64| x.to_bits(), "an `f64`", write_f64_le, write_f64_be, write_f64_ne);
 }
+
+impl<W> WritePrimitives for W where W: io::Write {}
 
 /// Provides methods for reading strings of various encodings.
 pub trait ReadStrings: io::Read {
