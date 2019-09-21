@@ -89,6 +89,7 @@ macro_rules! write_impl {
 
 /// Provides methods for reading primitive numbers
 /// (except `isize` and `usize` as their size is platform dependent).
+#[rustfmt::skip]
 pub trait ReadPrimitives: io::Read {
     read_impl!(i8, "an `i8`", read_i8);
     read_impl!(u8, "a `u8`", read_u8);
@@ -102,17 +103,18 @@ pub trait ReadPrimitives: io::Read {
     read_impl!(u64, "a `u64`", read_u64_le, read_u64_be, read_u64_ne);
     read_impl!(i128, "an `i128`", read_i128_le, read_i128_be, read_i128_ne);
     read_impl!(u128, "a `u128`", read_u128_le, read_u128_be, read_u128_ne);
-
-    #[rustfmt::skip]
     read_impl!(u32, |x| f32::from_bits(x), f32, "an `f32`", read_f32_le, read_f32_be, read_f32_ne);
-
-    #[rustfmt::skip]
     read_impl!(u64, |x| f64::from_bits(x), f64, "an `f64`", read_f64_le, read_f64_be, read_f64_ne);
 }
 
 impl<R> ReadPrimitives for R where R: io::Read {}
 
-pub trait WritePrimitives: io::Write {
+/// Provides methods for writing primitive numbers
+/// (except `isize` and `usize` as their size is platform dependent).
+/// 
+/// All functions return bytes written, as all `io::Write` functions do.
+#[rustfmt::skip]
+pub trait WritePrimitives: io::Write {    
     write_impl!(i8, "an `i8`", write_i8);
     write_impl!(u8, "a `u8`", write_u8);
     write_impl!(i8, "an `i8`", write_i8_le, write_i8_be, write_i8_ne);
@@ -125,11 +127,7 @@ pub trait WritePrimitives: io::Write {
     write_impl!(u64, "a `u64`", write_u64_le, write_u64_be, write_u64_ne);
     write_impl!(i128, "an `i128`", write_i128_le, write_i128_be, write_i128_ne);
     write_impl!(u128, "a `u128`", write_u128_le, write_u128_be, write_u128_ne);
-
-    #[rustfmt::skip]
     write_impl!(f32, |x: f32| x.to_bits(), "an `f32`", write_f32_le, write_f32_be, write_f32_ne);
-
-    #[rustfmt::skip]
     write_impl!(f64, |x: f64| x.to_bits(), "an `f64`", write_f64_le, write_f64_be, write_f64_ne);
 }
 
@@ -197,7 +195,6 @@ pub trait ReadStrings: io::Read {
     /// It will return io::ErrorKind::UnexpectedEof.
     ///
     /// Providing a `size_hint` will speed up the reading slightly, especially on larger strings.
-    #[inline(always)]
     fn read_cstring_utf8(
         &mut self,
         max: Option<usize>,
