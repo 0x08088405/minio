@@ -1,0 +1,17 @@
+## Usage requires nightly rustfmt because all the features are on the nightly branch, basically.
+## Their readme instructs you how to install a nightly toolchain specifically because of this,
+## and then run rustfmt in the context of that toolchain.
+
+## I could not tell you why.
+
+# Error if unable to get all lines within max_width, except for comments and string literals.
+error_on_line_overflow = true
+
+# Error if unable to get comments or string literals within max_width, or they are left with trailing whitespaces.
+error_on_unformatted = true
+
+# That bleeding edge!
+unstable_features = true
+
+# Formatting ruleset (full preset)
+version = "Two"
