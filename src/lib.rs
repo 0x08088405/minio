@@ -1,10 +1,4 @@
-use std::{
-    convert::identity,
-    io,
-    mem::size_of,
-    slice,
-    string::{FromUtf16Error, FromUtf8Error},
-};
+use std::{convert::identity, io, mem::size_of, slice};
 
 macro_rules! _read_impl {
     // Used for i8 and u8, as they are endian independent.
@@ -135,21 +129,32 @@ impl<W> WritePrimitives for W where W: io::Write {}
 
 /// Provides methods for reading strings of various encodings.
 pub trait ReadStrings: io::Read {
-    /// Reads a UTF-8 encoded string from the underlying reader with a given length
-    /// (of bytes, not characters).
-    #[inline(always)]
-    fn read_string_utf8(&mut self, len: usize) -> io::Result<Result<String, FromUtf8Error>> {
-        let mut buf = vec![0u8; len];
-        self.read_exact(&mut buf[..])?;
-        Ok(String::from_utf8(buf))
+    /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
+    fn read_string_utf8(
+        &mut self,
+        len: usize,
+    ) -> io::Result<Result<String, std::string::FromUtf8Error>> {
+        Ok(String::from_utf8({
+            let mut buf = vec![0u8; len];
+            self.read_exact(&mut buf[..])?;
+            buf
+        }))
     }
 
-    /// Reads a UTF-8 encoded string from the underlying reader with a given length
-    /// (of bytes, not characters).
-    ///
-    /// If any invalid UTF-8 sequences are present, they are replaced
-    /// with U+FFFD REPLACEMENT CHARACTER, which looks like this: �
-    #[inline(always)]
+    /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
+    /// The validity of the UTF-8 is not checked, therefore this is unsafe.
+    unsafe fn read_string_utf8_unchecked(&mut self, len: usize) -> io::Result<String> {
+        Ok(String::from_utf8_unchecked({
+            let mut buf = vec![0u8; len];
+            self.read_exact(&mut buf[..])?;
+            buf
+        }))
+    }
+
+    /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
+    /// If any invalid UTF-8 sequences are present,
+    /// they are replaced with U+FFFD REPLACEMENT CHARACTER,
+    /// which looks like this: �
     fn read_string_utf8_lossy(&mut self, len: usize) -> io::Result<String> {
         let mut buf = vec![0u8; len];
         self.read_exact(&mut buf[..])?;
@@ -162,7 +167,10 @@ pub trait ReadStrings: io::Read {
     /// # Panics
     /// Panics if `len * 2` overflows usize.
     #[inline(always)]
-    fn read_string_utf16(&mut self, len: usize) -> io::Result<Result<String, FromUtf16Error>> {
+    fn read_string_utf16(
+        &mut self,
+        len: usize,
+    ) -> io::Result<Result<String, std::string::FromUtf16Error>> {
         let mut buf = vec![0u8; len.checked_mul(2).expect("input length overflows usize")];
         self.read_exact(&mut buf[..])?;
         Ok(String::from_utf16(unsafe {
@@ -199,7 +207,7 @@ pub trait ReadStrings: io::Read {
         &mut self,
         max: Option<usize>,
         size_hint: Option<usize>,
-    ) -> io::Result<Result<String, FromUtf8Error>> {
+    ) -> io::Result<Result<String, std::string::FromUtf8Error>> {
         let mut buf = Vec::with_capacity(size_hint.unwrap_or(0));
         let mut count = 0;
         loop {
@@ -222,7 +230,7 @@ pub trait ReadStrings: io::Read {
 
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader
     /// with an unknown length. Stops reading at the first null terminator.
-    /// 
+    ///
     /// If any invalid UTF-8 sequences are present, they are replaced
     /// with U+FFFD REPLACEMENT CHARACTER, which looks like this: �
     ///
