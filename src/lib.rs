@@ -147,3 +147,5 @@ pub trait ReadStrings: io::Read {
         }
     }
 }
+
+impl<R> ReadStrings for R where R: io::Read {}
