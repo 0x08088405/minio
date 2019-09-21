@@ -68,7 +68,7 @@ pub trait ReadPrimitives: io::Read {
 impl<R> ReadPrimitives for R where R: io::Read {}
 
 pub trait ReadStrings: io::Read {
-    /// Reads a UTF-8 encoded string from the underlying reader with a given length.
+    /// Reads a UTF-8 encoded string from the underlying reader with a given length
     /// (of bytes, not characters).
     #[inline(always)]
     fn read_string_utf8(&mut self, len: usize) -> io::Result<Result<String, FromUtf8Error>> {
@@ -129,7 +129,7 @@ pub trait ReadStrings: io::Read {
     /// finding a null terminator, as a safety measure.
     /// It will return io::ErrorKind::UnexpectedEof.
     ///
-    /// Providing `size_hint` will speed up the reading slightly, especially on larger strings.
+    /// Providing a `size_hint` will speed up the reading slightly, especially on larger strings.
     #[inline(always)]
     fn read_cstring_utf8(
         &mut self,
