@@ -4,6 +4,7 @@ use std::{
 
 macro_rules! read_impl {
     ($t: ty, $name: literal, $fn: ident) => {
+        #[inline(always)]
         #[doc = "Reads a `"] #[doc = $name] #[doc = "` from the underlying reader."]
         fn $fn(&mut self) -> io::Result<$t> {
             Ok(<$t>::from_ne_bytes(read_impl_body!(self, $t)))
@@ -15,16 +16,19 @@ macro_rules! read_impl {
     };
 
     ($read_t: ty, $map: expr, $ret_t: ty, $name: literal, $le: ident, $be: ident, $ne: ident) => {
+        #[inline(always)]
         #[doc = "Reads a `"] #[doc = $name] #[doc = "` (little-endian) from the underlying reader."]
         fn $le(&mut self) -> io::Result<$ret_t> {
             Ok($map(<$read_t>::from_le_bytes(read_impl_body!(self, $read_t))))
         }
 
+        #[inline(always)]
         #[doc = "Reads a `"] #[doc = $name] #[doc = "` (big-endian) from the underlying reader."]
         fn $be(&mut self) -> io::Result<$ret_t> {
             Ok($map(<$read_t>::from_be_bytes(read_impl_body!(self, $read_t))))
         }
 
+        #[inline(always)]
         #[doc = "Reads a `"] #[doc = $name] #[doc = "` (native-endian) from the underlying reader."]
         fn $ne(&mut self) -> io::Result<$ret_t> {
             Ok($map(<$read_t>::from_ne_bytes(read_impl_body!(self, $read_t))))
@@ -66,6 +70,7 @@ impl<R> ReadPrimitives for R where R: io::Read {}
 pub trait ReadStrings: io::Read {
     /// Reads a UTF-8 encoded string from the underlying reader with a given length.
     /// (of bytes, not characters).
+    #[inline(always)]
     fn read_string_utf8(&mut self, len: usize) -> io::Result<Result<String, FromUtf8Error>> {
         let mut buf = vec![0u8; len];
         self.read_exact(&mut buf[..])?;
@@ -77,6 +82,7 @@ pub trait ReadStrings: io::Read {
     ///
     /// If any invalid UTF-8 sequences are present, they are replaced
     /// with U+FFFD REPLACEMENT CHARACTER, which looks like this: �
+    #[inline(always)]
     fn read_string_utf8_lossy(&mut self, len: usize) -> io::Result<String> {
         let mut buf = vec![0u8; len];
         self.read_exact(&mut buf[..])?;
@@ -88,6 +94,7 @@ pub trait ReadStrings: io::Read {
     ///
     /// # Panics
     /// Panics if `len * 2` overflows usize.
+    #[inline(always)]
     fn read_string_utf16(&mut self, len: usize) -> io::Result<Result<String, FromUtf16Error>> {
         let mut buf = vec![0u8; len.checked_mul(2).expect("input length overflows usize")];
         self.read_exact(&mut buf[..])?;
@@ -104,6 +111,7 @@ pub trait ReadStrings: io::Read {
     ///
     /// # Panics
     /// Panics if `len * 2` overflows usize.
+    #[inline(always)]
     fn read_string_utf16_lossy(&mut self, len: usize) -> io::Result<String> {
         let mut buf = vec![0u8; len.checked_mul(2).expect("input length overflows usize")];
         self.read_exact(&mut buf[..])?;
@@ -122,6 +130,7 @@ pub trait ReadStrings: io::Read {
     /// It will return io::ErrorKind::UnexpectedEof.
     ///
     /// Providing `size_hint` will speed up the reading slightly, especially on larger strings.
+    #[inline(always)]
     fn read_cstring_utf8(
         &mut self,
         max: Option<usize>,
