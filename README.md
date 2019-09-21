@@ -3,6 +3,7 @@
 Minimal `std::io` extension for `Read`ing & `Write`ing simple data types.
 
 ## Usage
+In some examples, `.unwrap()` is used, obviously in production code you wouldn't want to.
 ### Reading
 ```rust
 use minio::{ReadPrimitives, ReadStrings};
@@ -14,7 +15,7 @@ fn main() -> io::Result<()> {
     
     // size-types not provided because of byte length inconsistency across architectures
     let length = reader.read_u32_le()? as usize;
-    let a_wide_string = reader.read_string_utf16(length);
+    let a_wide_string = reader.read_string_utf16(length)?.unwrap();
     
     // ffi strings are supported as well
     // here we read a max of 1024 bytes with an unknown final size
