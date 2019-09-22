@@ -141,19 +141,19 @@ fn read_write_strings() {
     assert_eq!(
         "Hello, world!",
         Cursor::new(test_cstring)
-            .read_cstr_utf8(None, None)
+            .read_cstr_utf8(None)
             .unwrap()
             .unwrap()
             .as_str()
     );
     assert!(
         Cursor::new(test_cstring)
-            .read_cstr_utf8(Some(4), None)
+            .read_cstr_utf8(Some(4))
             .is_err()
     ); // max chars = 4, no null found
     assert!(
         Cursor::new(test_cstring_unterminated)
-            .read_cstr_utf8(None, None)
+            .read_cstr_utf8(None)
             .is_err()
     );
 
