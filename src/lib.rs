@@ -132,7 +132,7 @@ impl<W> WritePrimitives for W where W: io::Write {}
 /// Provides methods for reading strings of various encodings.
 pub trait ReadStrings: io::Read {
     /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
-    fn read_string_utf8(
+    fn read_str_utf8(
         &mut self,
         len: usize,
     ) -> io::Result<Result<String, std::string::FromUtf8Error>> {
@@ -145,7 +145,7 @@ pub trait ReadStrings: io::Read {
 
     /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
     /// The validity of the UTF-8 is not checked, therefore this is unsafe.
-    unsafe fn read_string_utf8_unchecked(&mut self, len: usize) -> io::Result<String> {
+    unsafe fn read_str_utf8_unchecked(&mut self, len: usize) -> io::Result<String> {
         Ok(String::from_utf8_unchecked({
             let mut buf = vec![0u8; len];
             self.read_exact(&mut buf[..])?;
@@ -157,7 +157,7 @@ pub trait ReadStrings: io::Read {
     /// If any invalid UTF-8 sequences are present,
     /// they are replaced with U+FFFD REPLACEMENT CHARACTER,
     /// which looks like this: �
-    fn read_string_utf8_lossy(&mut self, len: usize) -> io::Result<String> {
+    fn read_str_utf8_lossy(&mut self, len: usize) -> io::Result<String> {
         let mut buf = vec![0u8; len];
         self.read_exact(&mut buf[..])?;
         Ok(String::from_utf8_lossy(&buf).into_owned())
@@ -169,7 +169,7 @@ pub trait ReadStrings: io::Read {
     /// # Panics
     /// Panics if `len * 2` overflows usize.
     #[inline(always)]
-    fn read_string_utf16(
+    fn read_str_utf16(
         &mut self,
         len: usize,
     ) -> io::Result<Result<String, std::string::FromUtf16Error>> {
@@ -189,7 +189,7 @@ pub trait ReadStrings: io::Read {
     /// # Panics
     /// Panics if `len * 2` overflows usize.
     #[inline(always)]
-    fn read_string_utf16_lossy(&mut self, len: usize) -> io::Result<String> {
+    fn read_str_utf16_lossy(&mut self, len: usize) -> io::Result<String> {
         let mut buf = vec![0u8; len.checked_mul(2).expect("input length overflows usize")];
         self.read_exact(&mut buf[..])?;
         Ok(String::from_utf16_lossy(unsafe {
@@ -205,7 +205,7 @@ pub trait ReadStrings: io::Read {
     /// It will return io::ErrorKind::UnexpectedEof.
     ///
     /// Providing a `size_hint` will speed up the reading slightly, especially on larger strings.
-    fn read_cstring_utf8(
+    fn read_cstr_utf8(
         &mut self,
         max: Option<usize>,
         size_hint: Option<usize>,
@@ -241,7 +241,7 @@ pub trait ReadStrings: io::Read {
     /// It will return io::ErrorKind::UnexpectedEof.
     ///
     /// Providing a `size_hint` will speed up the reading slightly, especially on larger strings.
-    fn read_cstring_utf8_lossy(
+    fn read_cstr_utf8_lossy(
         &mut self,
         max: Option<usize>,
         size_hint: Option<usize>,
