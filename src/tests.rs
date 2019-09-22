@@ -100,51 +100,72 @@ fn read_write_strings() {
     let test_cstring_unterminated = b"Hello, world!"; // no null
 
     // reading
-    let mut reader = Cursor::new(test_utf8.as_bytes());
     assert_eq!(
         test_utf8,
-        reader.read_str_utf8(test_utf8.len()).unwrap().unwrap().as_str()
+        Cursor::new(test_utf8.as_bytes())
+            .read_str_utf8(test_utf8.len())
+            .unwrap()
+            .unwrap()
+            .as_str()
     );
 
-    let mut reader = Cursor::new(test_utf8_invalid);
     assert!(
-        reader
+        Cursor::new(test_utf8_invalid)
             .read_str_utf8(test_utf8_invalid.len())
             .unwrap()
             .is_err()
     );
-    reader.set_position(0);
     assert_eq!(
         "Hello, �world!",
-        reader.read_str_utf8_lossy(test_utf8_invalid.len()).unwrap().as_str()
+        Cursor::new(test_utf8_invalid)
+            .read_str_utf8_lossy(test_utf8_invalid.len())
+            .unwrap()
+            .as_str()
     );
 
     let utf16_bytes = test_utf8
         .encode_utf16()
         .collect::<Vec<_>>()
         .into_boxed_slice();
-    let mut reader = Cursor::new(unsafe {
-        slice::from_raw_parts(utf16_bytes.as_ptr() as *const u8, utf16_bytes.len() * 2)
-    });
     assert_eq!(
         test_utf8,
-        reader.read_str_utf16(utf16_bytes.len()).unwrap().unwrap().as_str()
+        Cursor::new(unsafe {
+            slice::from_raw_parts(utf16_bytes.as_ptr() as *const u8, utf16_bytes.len() * 2)
+        })
+        .read_str_utf16(utf16_bytes.len())
+        .unwrap()
+        .unwrap()
+        .as_str()
     );
 
-    let mut reader = Cursor::new(test_cstring);
     assert_eq!(
         "Hello, world!",
-        &*(reader.read_cstr_utf8(None, None).unwrap().unwrap())
+        Cursor::new(test_cstring)
+            .read_cstr_utf8(None, None)
+            .unwrap()
+            .unwrap()
+            .as_str()
     );
-    reader.set_position(0);
-    assert!(reader.read_cstr_utf8(Some(4), None).is_err()); // max chars = 4, no null found
+    assert!(
+        Cursor::new(test_cstring)
+            .read_cstr_utf8(Some(4), None)
+            .is_err()
+    ); // max chars = 4, no null found
+    assert!(
+        Cursor::new(test_cstring_unterminated)
+            .read_cstr_utf8(None, None)
+            .is_err()
+    );
 
-    let mut reader = Cursor::new(test_cstring_unterminated);
-    assert!(reader.read_cstr_utf8(None, None).is_err());
-
-    let mut reader = Cursor::new(test_cstring);
     // [..13] trims the null here for fair comparison
-    assert_eq!(&test_cstring[..13], reader.read_cstr_utf8_fast(None).unwrap().unwrap().as_bytes());
+    assert_eq!(
+        &test_cstring[..13],
+        Cursor::new(test_cstring)
+            .read_cstr_utf8_fast(None)
+            .unwrap()
+            .unwrap()
+            .as_bytes()
+    );
 
     // writing
     // ...... oh that doesn't exist yet!
