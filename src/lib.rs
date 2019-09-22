@@ -294,6 +294,29 @@ pub trait ReadStrings: io::Read {
         self.read_exact(&mut buf[..])?;
         Ok(String::from_utf8(buf))
     }
+
+    fn read_cstr_utf8_lossy_fast(
+        &mut self,
+        max: Option<usize>,
+    ) -> io::Result<String>
+    where
+        Self: ReadPrimitives + io::Seek,
+    {
+        let mut length = 0usize;
+        while self.read_u8()? != 0 {
+            length += 1;
+            if let Some(max) = max {
+                if max >= length {
+                    return Err(io::ErrorKind::UnexpectedEof.into());
+                }
+            }
+        }
+        self.seek(SeekFrom::Current(-(length as i64 + 1)))?;
+
+        let mut buf = vec![0u8; length];
+        self.read_exact(&mut buf[..])?;
+        Ok(String::from_utf8_lossy(&buf).into_owned())
+    }
 }
 
 impl<R> ReadStrings for R where R: io::Read {}
