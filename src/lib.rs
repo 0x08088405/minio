@@ -135,6 +135,25 @@ pub trait WritePrimitives: io::Write {
 
 impl<W> WritePrimitives for W where W: io::Write {}
 
+macro_rules! _null_chunk {
+    ($rdr: expr, $max: expr) => {{
+        let mut length = 0usize;
+while $rdr.read_u8()? != 0 {
+    length += 1;
+    if let Some(max) = $max {
+        if max >= length {
+            return Err(io::ErrorKind::UnexpectedEof.into());
+        }
+    }
+}
+$rdr.seek(SeekFrom::Current(-(length as i64 + 1)))?;
+
+let mut buf = vec![0u8; length];
+$rdr.read_exact(&mut buf[..])?;
+Ok(buf)
+    }};
+}
+
 /// Provides methods for reading strings of various encodings.
 pub trait ReadStrings: io::Read {
     /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
@@ -279,20 +298,8 @@ pub trait ReadStrings: io::Read {
     where
         Self: ReadPrimitives + io::Seek,
     {
-        let mut length = 0usize;
-        while self.read_u8()? != 0 {
-            length += 1;
-            if let Some(max) = max {
-                if max >= length {
-                    return Err(io::ErrorKind::UnexpectedEof.into());
-                }
-            }
-        }
-        self.seek(SeekFrom::Current(-(length as i64 + 1)))?;
-
-        let mut buf = vec![0u8; length];
-        self.read_exact(&mut buf[..])?;
-        Ok(String::from_utf8(buf))
+        let chunk: io::Result<Vec<u8>> = _null_chunk!(self, max);
+        Ok(String::from_utf8(chunk?))
     }
 
     fn read_cstr_utf8_lossy_fast(
@@ -302,20 +309,9 @@ pub trait ReadStrings: io::Read {
     where
         Self: ReadPrimitives + io::Seek,
     {
-        let mut length = 0usize;
-        while self.read_u8()? != 0 {
-            length += 1;
-            if let Some(max) = max {
-                if max >= length {
-                    return Err(io::ErrorKind::UnexpectedEof.into());
-                }
-            }
-        }
-        self.seek(SeekFrom::Current(-(length as i64 + 1)))?;
-
-        let mut buf = vec![0u8; length];
-        self.read_exact(&mut buf[..])?;
-        Ok(String::from_utf8_lossy(&buf).into_owned())
+        let chunk: io::Result<Vec<u8>> = _null_chunk!(self, max);
+        let chunk = chunk?;
+        Ok(String::from_utf8_lossy(&chunk).into_owned())
     }
 }
 
