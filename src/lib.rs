@@ -135,6 +135,33 @@ pub trait WritePrimitives: io::Write {
 
 impl<W> WritePrimitives for W where W: io::Write {}
 
+fn _null_chunk_slow<R>(
+    mut rdr: R,
+    max: Option<usize>,
+    size_hint: Option<usize>,
+) -> io::Result<Vec<u8>>
+where
+    R: io::Read,
+{
+    let mut buf = Vec::with_capacity(size_hint.unwrap_or(0));
+    let mut count = 0;
+    loop {
+        if let Some(max) = max {
+            if count > max {
+                break Err(io::ErrorKind::UnexpectedEof.into());
+            }
+        }
+
+        let byte = rdr.read_u8()?;
+        if byte != 0x00 {
+            buf.push(byte);
+            count += 1;
+        } else {
+            break Ok(buf);
+        }
+    }
+}
+
 fn _null_chunk<R>(mut rdr: R, max: Option<usize>) -> io::Result<Vec<u8>>
 where
     R: io::Read + io::Seek,
@@ -236,24 +263,7 @@ pub trait ReadStrings: io::Read {
         max: Option<usize>,
         size_hint: Option<usize>,
     ) -> io::Result<Result<String, std::string::FromUtf8Error>> {
-        let mut buf = Vec::with_capacity(size_hint.unwrap_or(0));
-        let mut count = 0;
-        loop {
-            if let Some(max) = max {
-                if count > max {
-                    break Err(io::ErrorKind::UnexpectedEof.into());
-                }
-            }
-
-            let mut next = [0u8; 1];
-            self.read_exact(&mut next[..])?;
-            if next[0] != 0x00 {
-                buf.push(next[0]);
-                count += 1;
-            } else {
-                break Ok(String::from_utf8(buf));
-            }
-        }
+        _null_chunk_slow(self, max, size_hint).map(|buf| String::from_utf8(buf))
     }
 
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader
@@ -272,24 +282,8 @@ pub trait ReadStrings: io::Read {
         max: Option<usize>,
         size_hint: Option<usize>,
     ) -> io::Result<String> {
-        let mut buf = Vec::with_capacity(size_hint.unwrap_or(0));
-        let mut count = 0;
-        loop {
-            if let Some(max) = max {
-                if count > max {
-                    break Err(io::ErrorKind::UnexpectedEof.into());
-                }
-            }
-
-            let mut next = [0u8; 1];
-            self.read_exact(&mut next[..])?;
-            if next[0] != 0x00 {
-                buf.push(next[0]);
-                count += 1;
-            } else {
-                break Ok(String::from_utf8_lossy(&buf).into_owned());
-            }
-        }
+        _null_chunk_slow(self, max, size_hint)
+            .map(|buf| String::from_utf8_lossy(&*buf).into_owned())
     }
 
     fn read_cstr_utf8_fast(
