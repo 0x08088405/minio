@@ -1,6 +1,12 @@
-#[cfg(test)] mod tests;
+#[cfg(test)]
+mod tests;
 
-use std::{convert::identity, io, mem::size_of, slice};
+use std::{
+    convert::identity,
+    io::{self, SeekFrom},
+    mem::size_of,
+    slice,
+};
 
 macro_rules! _read_impl {
     // Used for i8 and u8, as they are endian independent.
@@ -264,6 +270,29 @@ pub trait ReadStrings: io::Read {
                 break Ok(String::from_utf8_lossy(&buf).into_owned());
             }
         }
+    }
+
+    fn read_cstr_utf8_fast(
+        &mut self,
+        max: Option<usize>,
+    ) -> io::Result<Result<String, std::string::FromUtf8Error>>
+    where
+        Self: ReadPrimitives + io::Seek,
+    {
+        let mut length = 0usize;
+        while self.read_u8()? != 0 {
+            length += 1;
+            if let Some(max) = max {
+                if max >= length {
+                    return Err(io::ErrorKind::UnexpectedEof.into());
+                }
+            }
+        }
+        self.seek(SeekFrom::Current(-(length as i64 + 1)))?;
+
+        let mut buf = vec![0u8; length];
+        self.read_exact(&mut buf[..])?;
+        Ok(String::from_utf8(buf))
     }
 }
 
