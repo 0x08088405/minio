@@ -3,7 +3,7 @@
 Minimal `std::io` extension for `Read`ing & `Write`ing simple data types.
 
 ## Usage
-In some examples, `.unwrap()` is used, obviously in production code you wouldn't want to.
+In some examples, `.unwrap()` is used, obviously in production code you wouldn't want to unless you actually want it to panic on failure (even then ``called `Result::unwrap()` on an `Err` value`` is not exactly helpful).
 ### Reading
 ```rust
 use minio::{ReadPrimitives, ReadStrings};
