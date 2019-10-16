@@ -135,10 +135,7 @@ pub trait WritePrimitives: io::Write {
 
 impl<W> WritePrimitives for W where W: io::Write {}
 
-fn _null_chunk_slow<R>(
-    mut rdr: R,
-    max: Option<usize>,
-) -> io::Result<Vec<u8>>
+fn _null_chunk_slow<R>(mut rdr: R, max: Option<usize>) -> io::Result<Vec<u8>>
 where
     R: io::Read,
 {
@@ -196,7 +193,7 @@ pub trait ReadStrings: io::Read {
     }
 
     /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
-    /// 
+    ///
     /// The validity of the UTF-8 is not checked, therefore this is marked **unsafe**.
     unsafe fn read_str_utf8_unchecked(&mut self, len: usize) -> io::Result<String> {
         Ok(String::from_utf8_unchecked({
@@ -207,7 +204,7 @@ pub trait ReadStrings: io::Read {
     }
 
     /// Reads a UTF-8 encoded string from the underlying reader with a given length (in bytes).
-    /// 
+    ///
     /// If any invalid UTF-8 is present, the bad chars are replaced with
     /// U+FFFD REPLACEMENT CHARACTER, which looks like this: �
     fn read_str_utf8_lossy(&mut self, len: usize) -> io::Result<String> {
@@ -222,7 +219,10 @@ pub trait ReadStrings: io::Read {
     /// # Panics
     /// Panics if `len * 2` overflows usize.
     #[inline(always)]
-    fn read_str_utf16(&mut self, len: usize) -> io::Result<Result<String, std::string::FromUtf16Error>> {
+    fn read_str_utf16(
+        &mut self,
+        len: usize,
+    ) -> io::Result<Result<String, std::string::FromUtf16Error>> {
         let mut buf = vec![0u8; len.checked_mul(2).expect("input length overflows usize")];
         self.read_exact(&mut buf[..])?;
         Ok(String::from_utf16(unsafe {
@@ -247,13 +247,12 @@ pub trait ReadStrings: io::Read {
         }))
     }
 
-
     /// **If your reader has `io::Seek`, use
     /// [read_cstr_utf8_fast](#method.read_cstr_utf8_fast)
     /// instead.**
-    /// 
+    ///
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader.
-    /// 
+    ///
     /// If `max` is provided, it'll only try to read that many bytes before erroring (giving up).
     fn read_cstr_utf8(
         &mut self,
@@ -265,41 +264,34 @@ pub trait ReadStrings: io::Read {
     /// **If your reader has `io::Seek`, use
     /// [read_cstr_utf8_unchecked_fast](#method.read_cstr_utf8_unchecked_fast)
     /// instead.**
-    /// 
+    ///
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader.
-    /// 
+    ///
     /// If `max` is provided, it'll only try to read that many bytes before erroring (giving up).
-    /// 
+    ///
     /// The validity of the UTF-8 is not checked, therefore this is marked **unsafe**.
-    unsafe fn read_cstr_utf8_unchecked(
-        &mut self,
-        max: Option<usize>,
-    ) -> io::Result<String> {
+    unsafe fn read_cstr_utf8_unchecked(&mut self, max: Option<usize>) -> io::Result<String> {
         _null_chunk_slow(self, max).map(|buf| String::from_utf8_unchecked(buf))
     }
 
     /// **If your reader has `io::Seek`, use
     /// [read_cstr_utf8_lossy_fast](#method.read_cstr_utf8_lossy_fast)
     /// instead.**
-    /// 
+    ///
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader.
-    /// 
+    ///
     /// If `max` is provided, it'll only try to read that many bytes before erroring (giving up).
-    /// 
+    ///
     /// If any invalid UTF-8 is present, the bad chars are replaced with
     /// U+FFFD REPLACEMENT CHARACTER, which looks like this: �
-    fn read_cstr_utf8_lossy(
-        &mut self,
-        max: Option<usize>,
-    ) -> io::Result<String> {
-        _null_chunk_slow(self, max)
-            .map(|buf| String::from_utf8_lossy(&*buf).into_owned())
+    fn read_cstr_utf8_lossy(&mut self, max: Option<usize>) -> io::Result<String> {
+        _null_chunk_slow(self, max).map(|buf| String::from_utf8_lossy(&*buf).into_owned())
     }
 
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader.
-    /// 
+    ///
     /// If `max` is provided, it'll only try to read that many bytes before erroring (giving up).
-    /// 
+    ///
     /// *This is functionally identical to
     /// [read_cstr_utf8](#method.read_cstr_utf8),
     /// it's just a lot faster, but only works on readers that have `io::Seek`.*
@@ -315,29 +307,28 @@ pub trait ReadStrings: io::Read {
     }
 
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader.
-    /// 
+    ///
     /// If `max` is provided, it'll only try to read that many bytes before erroring (giving up).
-    /// 
+    ///
     /// The validity of the UTF-8 is not checked, therefore this is marked **unsafe**.
-    /// 
+    ///
     /// *This is functionally identical to
     /// [read_cstr_utf8_unchecked](#method.read_cstr_utf8_unchecked),
     /// it's just a lot faster, but only works on readers that have `io::Seek`.*
-    unsafe fn read_cstr_utf8_unchecked_fast(
-        &mut self,
-        max: Option<usize>,
-    ) -> io::Result<String>
-    where Self: ReadPrimitives + io::Seek {
+    unsafe fn read_cstr_utf8_unchecked_fast(&mut self, max: Option<usize>) -> io::Result<String>
+    where
+        Self: ReadPrimitives + io::Seek,
+    {
         _null_chunk(self, max).map(|buf| String::from_utf8_unchecked(buf))
     }
 
     /// Reads a UTF-8 encoded, null-terminated string from the underlying reader.
-    /// 
+    ///
     /// If `max` is provided, it'll only try to read that many bytes before erroring (giving up).
-    /// 
+    ///
     /// If any invalid UTF-8 is present, it's replaced with
     /// U+FFFD REPLACEMENT CHARACTER, which looks like this: �
-    /// 
+    ///
     /// *This is functionally identical to
     /// [read_cstr_utf8_lossy](#method.read_cstr_utf8_lossy),
     /// it's just a lot faster, but only works on readers that have `io::Seek`.*
