@@ -130,9 +130,9 @@ fn read_write_strings() {
             .is_err()
     );
 
-    // [..13] trims the null here for fair comparison
+    // len-1 trims the null here for fair comparison
     assert_eq!(
-        &test_cstring[..13],
+        &test_cstring[..test_cstring.len() - 1],
         Cursor::new(test_cstring)
             .read_cstr_utf8_fast(None)
             .unwrap()
