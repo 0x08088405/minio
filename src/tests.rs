@@ -32,6 +32,10 @@ fn read_write_primitives() {
     assert_eq!(-3617274229383002113, TEST.read_i64_be().unwrap());
     assert_eq!(6.9, TEST.read_f32_le().unwrap());
     assert_eq!(-429623296.0, TEST.read_f32_be().unwrap());
+    assert_eq!(23861379596529284064479147122191289549, TEST.read_u128_le().unwrap());
+    assert_eq!(273555434967085284028993218695928541969, TEST.read_u128_be().unwrap());
+    assert_eq!(23861379596529284064479147122191289549, TEST.read_i128_le().unwrap());
+    assert_eq!(-66726931953853179434381388735839669487, TEST.read_i128_be().unwrap());
 
     // write
     let mut buf = vec![];
@@ -54,8 +58,11 @@ fn read_write_primitives() {
     buf.write_i64_le(-33931039414104883).unwrap(); assert_eq!(&TEST[..size_of::<i64>()], &*buf); buf.clear();
     buf.write_i64_be(-3617274229383002113).unwrap(); assert_eq!(&TEST[..size_of::<i64>()], &*buf); buf.clear();
     buf.write_f32_le(6.9).unwrap(); assert_eq!(&TEST[..size_of::<f32>()], &*buf); buf.clear();
-    buf.write_f32_be(-429623296.0).unwrap();
-    assert_eq!(&TEST[..size_of::<f32>()], &*buf);
+    buf.write_f32_be(-429623296.0).unwrap(); assert_eq!(&TEST[..size_of::<f32>()], &*buf); buf.clear();
+    buf.write_u128_le(23861379596529284064479147122191289549).unwrap(); assert_eq!(&TEST[..size_of::<u128>()], &*buf); buf.clear();
+    buf.write_u128_be(273555434967085284028993218695928541969).unwrap(); assert_eq!(&TEST[..size_of::<u128>()], &*buf); buf.clear();
+    buf.write_i128_le(23861379596529284064479147122191289549).unwrap(); assert_eq!(&TEST[..size_of::<i128>()], &*buf); buf.clear();
+    buf.write_i128_be(-66726931953853179434381388735839669487).unwrap(); assert_eq!(&TEST[..size_of::<i128>()], &*buf); buf.clear();
 }
 
 #[test]
@@ -114,7 +121,9 @@ fn read_write_strings() {
             .unwrap()
             .as_str()
     );
-    assert!(Cursor::new(test_cstring).read_cstr_utf8(Some(4)).is_err()); // max chars = 4, no null found
+
+    // max chars = 4, no null found
+    assert!(Cursor::new(test_cstring).read_cstr_utf8(Some(4)).is_err());
     assert!(
         Cursor::new(test_cstring_unterminated)
             .read_cstr_utf8(None)
