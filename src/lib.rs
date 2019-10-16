@@ -1,12 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use std::{
-    convert::identity,
-    io::{self, SeekFrom},
-    mem::size_of,
-    slice,
-};
+use std::{convert::identity, io, mem::size_of, slice};
 
 macro_rules! _read_impl {
     // Used for i8 and u8, as they are endian independent.
@@ -171,7 +166,7 @@ where
             }
         }
     }
-    rdr.seek(SeekFrom::Current(-(length as i64 + 1)))?;
+    rdr.seek(io::SeekFrom::Current(-(length as i64 + 1)))?;
 
     let mut buf = vec![0u8; length];
     rdr.read_exact(&mut buf[..])?;
