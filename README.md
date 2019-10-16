@@ -11,6 +11,8 @@ use std::io;
 
 fn main() -> io::Result<()> {
     let mut reader = imaginary_reader(); // anything implementing io::Read
+    
+    // simple, consistent format for primitives
     let a_little_endian_i32 = reader.read_i32_le()?;
     
     // size-types not provided because of byte length inconsistency across architectures
