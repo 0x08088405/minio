@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/notviri/minio.svg?branch=master)](https://travis-ci.com/notviri/minio)
 # minio
-Minimal `std::io` extension for `Read`ing & `Write`ing simple data types.
+Minimal `std::io` extension for reducing boilerplate while `Read`ing and `Write`ing primitives & strings.
 
 ## Usage
 In some examples, `.unwrap()` is used, obviously in production code you wouldn't want to unless you actually want it to panic on failure (even then ``called `Result::unwrap()` on an `Err` value`` is not exactly helpful).
