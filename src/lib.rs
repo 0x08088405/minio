@@ -170,6 +170,7 @@ where
 
     let mut buf = vec![0u8; length];
     rdr.read_exact(&mut buf[..])?;
+    rdr.seek(io::SeekFrom::Current(1))?; // move past null-term
     Ok(buf)
 }
 
