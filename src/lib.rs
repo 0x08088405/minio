@@ -52,7 +52,7 @@ macro_rules! _write_impl {
         #[inline(always)]
         #[doc = "Writes "] #[doc = $name] #[doc = "to the underlying writer."]
         fn $fn(&mut self, val: $t) -> io::Result<usize> {
-            self.write(&val.to_ne_bytes())
+            self.write_all(&val.to_ne_bytes()).map(|()| size_of::<$t>())
         }
     };
 
@@ -65,21 +65,21 @@ macro_rules! _write_impl {
         #[doc = "Writes "] #[doc = $name]
         #[doc = "in little-endian format to the underlying writer."]
         fn $le(&mut self, val: $t) -> io::Result<usize> {
-            self.write(&$map(val).to_le_bytes())
+            self.write_all(&$map(val).to_le_bytes()).map(|()| size_of::<$t>())
         }
 
         #[inline(always)]
         #[doc = "Writes "] #[doc = $name]
         #[doc = "in big-endian format to the underlying writer."]
         fn $be(&mut self, val: $t) -> io::Result<usize> {
-            self.write(&$map(val).to_be_bytes())
+            self.write_all(&$map(val).to_be_bytes()).map(|()| size_of::<$t>())
         }
 
         #[inline(always)]
         #[doc = "Writes "] #[doc = $name]
         #[doc = "in native-endian format to the underlying writer."]
         fn $ne(&mut self, val: $t) -> io::Result<usize> {
-            self.write(&$map(val).to_ne_bytes())
+            self.write_all(&$map(val).to_ne_bytes()).map(|()| size_of::<$t>())
         }
     };
 }
