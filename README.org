@@ -1,0 +1,5 @@
+#+title: minio
+#+author: viri
+#+email: hi@viri.moe
+
+This was a helper library I wrote for [[https://github.com/OpenGMK/OpenGMK][OpenGMK]], before [[https://github.com/BurntSushi/byteorder][byteorder]] was available under a more permissive licence for what it does. There's a bunch of extra functions in here that were added for helping parse specific things for that project, but this is entirely deprecated now.
